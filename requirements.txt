@@ -1,0 +1,27 @@
+# =====================================================================
+# Dependency untuk KEDUA pipeline (ezviz_cloud_monitor.py DAN
+# nonezviz_rtsp_monitor.py) -- install semua di 1 environment yang
+# sama supaya kedua script bisa jalan bersamaan di server/laptop yang
+# sama:
+#     pip install -r requirements.txt
+# =====================================================================
+
+requests            # dipakai common_telegram_notifier.py (kirim alert ke Telegram)
+                     # & nonezviz_isapi_motion_listener.py (koneksi ISAPI alertStream)
+
+pyezvizapi>=1.0.4.6  # KHUSUS ezviz_cloud_monitor.py -- akses cloud EZVIZ (token,
+                     # alarm, download snapshot). Tidak dipakai nonezviz_rtsp_monitor.py.
+
+ultralytics          # common_human_verifier_yolo.py -- verifikasi visual YOLOv8n
+                     # (dipakai KEDUA pipeline). opencv-python-headless & numpy
+                     # otomatis ikut ter-install sebagai dependency ultralytics --
+                     # tidak perlu ditambahkan manual kecuali muncul error
+                     # "No module named 'cv2'" atau "No module named 'numpy'".
+
+openpyxl             # site_mapper_ezviz.py -- baca site_mapping_ezviz.xlsx.
+                     # KHUSUS ezviz_cloud_monitor.py.
+
+# CATATAN: static_background_filter.py SUDAH DIHAPUS TOTAL dari project
+# ini (per permintaan -- terbukti bikin alert tidak sesuai). Tidak ada
+# dependency tambahan yang perlu di-uninstall karena filter itu cuma
+# pakai cv2/numpy yang memang sudah dibutuhkan modul lain di atas.

@@ -1,0 +1,42 @@
+{
+  "_meta": {
+    "generated_note": "Example configuration with dummy data for portfolio purposes. Only cameras with source=hikvision or source=amtek belong here -- EZVIZ cameras are monitored separately via ezviz_cloud_monitor.py / site_mapping_ezviz.json to avoid duplicate alerts from both pipelines.",
+    "total_cameras": 2
+  },
+  "cameras": [
+    {
+      "no": 1,
+      "name": "SITE3-CAM-LOWER",
+      "site": "REPEATER SITE-3",
+      "cluster": "REGION-C",
+      "serial_number": "DS-EXAMPLE0001",
+      "ip_address": "192.168.3.10",
+      "source": "hikvision",
+      "status_monitor": true,
+      "rtsp_url": "rtsp://username:password@192.168.3.10:554/Streaming/Channels/101",
+      "username": "example_user",
+      "password": "example_password",
+      "port": 554,
+      "path": "/Streaming/Channels/101",
+      "note": null,
+      "isapi_enabled": true,
+      "isapi_port": 80
+    },
+    {
+      "no": 2,
+      "name": "SITE4-CAM-OUT",
+      "site": "SITE-4",
+      "cluster": "REGION-D",
+      "serial_number": "AMTEK-EXAMPLE0002",
+      "ip_address": "192.168.4.20",
+      "source": "amtek",
+      "status_monitor": true,
+      "rtsp_url": "rtsp://username:password@192.168.4.20:554/1",
+      "username": "example_user",
+      "password": "example_password",
+      "port": 554,
+      "path": "/1",
+      "note": "Example of a camera without ISAPI support (isapi_enabled omitted -> RTSP polling only)."
+    }
+  ]
+}

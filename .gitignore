@@ -1,0 +1,31 @@
+# Secrets / environment
+.env
+
+# Real camera configs (only the .example.json templates are tracked)
+site_mapping_ezviz.json
+nonezviz_cameras_config.json
+
+# Runtime state & tokens
+ezviz_token.json
+ezviz_seen_msgids.json
+ezviz_last_notified.json
+ezviz_noisy_streak.json
+nonezviz_last_notified.json
+
+# Snapshots
+ezviz_snapshots/
+nonezviz_snapshots/
+
+# Model weights (auto-downloaded by ultralytics on first run)
+yolov8n.pt
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
