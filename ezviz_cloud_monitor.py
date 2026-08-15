@@ -12,7 +12,7 @@ and restart to apply changes.
 
 Credentials (EZVIZ_USERNAME / EZVIZ_PASSWORD, and the shared
 TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID in common_telegram_notifier.py)
-are read from environment variables only. See .env.example.
+are read from environment variables, falling back to the defaults below.
 
 Run:
     python ezviz_cloud_monitor.py
@@ -42,9 +42,10 @@ from site_mapper_ezviz import (
 logger = logging.getLogger(__name__)
 
 # --- EZVIZ account ---
-EZVIZ_USERNAME = os.environ.get("EZVIZ_USERNAME")
-EZVIZ_PASSWORD = os.environ.get("EZVIZ_PASSWORD")
+EZVIZ_USERNAME = os.environ.get("EZVIZ_USERNAME", "Cctv.noc.ptt@gmail.com")
+EZVIZ_PASSWORD = os.environ.get("EZVIZ_PASSWORD", "Punyaptt@2023")
 EZVIZ_REGION = os.environ.get("EZVIZ_REGION", "apiisgp.ezvizlife.com")
+PYEZVIZAPI_BIN = os.environ.get("PYEZVIZAPI_BIN", "/home/ptt/human_detection/venv/bin/pyezvizapi")
 TOKEN_FILE = "ezviz_token.json"
 TOKEN_REFRESH_INTERVAL_SECONDS = 3600 * 4
 
@@ -179,7 +180,7 @@ def save_state(state: dict, keys=("seen_msgids", "last_notified", "noisy_streak"
 
 def refresh_token():
     cmd = [
-        "pyezvizapi", "-u", EZVIZ_USERNAME, "-p", EZVIZ_PASSWORD, "-r", EZVIZ_REGION,
+        PYEZVIZAPI_BIN, "-u", EZVIZ_USERNAME, "-p", EZVIZ_PASSWORD, "-r", EZVIZ_REGION,
         "--token-file", TOKEN_FILE, "--save-token",
         "--json", "devices", "status",
     ]
@@ -188,7 +189,7 @@ def refresh_token():
 
 
 def get_recent_alarms(limit: int) -> list:
-    cmd = ["pyezvizapi", "--token-file", TOKEN_FILE, "--json", "unifiedmsg", "--limit", str(limit)]
+    cmd = [PYEZVIZAPI_BIN, "--token-file", TOKEN_FILE, "--json", "unifiedmsg", "--limit", str(limit)]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         return json.loads(result.stdout)
@@ -204,7 +205,7 @@ def download_snapshot(serial: str, image_url: str, msg_id: str, device_name: str
     output_path = os.path.join(SNAPSHOT_DIR, f"{safe_time}_{safe_name}_{serial}_{safe_msgid}.jpg")
 
     cmd = [
-        "pyezvizapi", "--token-file", TOKEN_FILE,
+        PYEZVIZAPI_BIN, "--token-file", TOKEN_FILE,
         "save", "image", "--serial", serial,
         "--image-url", image_url, "--output", output_path,
     ]
@@ -265,6 +266,12 @@ def process_alarm(msg: dict, last_notified: dict, noisy_streak: dict) -> str:
         logger.info("%s (%s): verification detected=%s confidence=%.2f count=%d",
                     device_name, serial, detected, confidence, count)
         if not detected:
+            if os.path.exists(snapshot_path):
+                try:
+                    os.remove(snapshot_path)
+                    logger.info("%s (%s): no human detected, snapshot removed.", device_name, serial)
+                except OSError:
+                    logger.warning("Could not remove non-human snapshot: %s", snapshot_path)
             return "skipped_verification"
 
         annotated_path = snapshot_path.rsplit(".", 1)[0] + "_annotated.jpg"
@@ -330,9 +337,7 @@ def poll_once(state: dict):
         result = process_alarm(msg, last_notified, noisy_streak)
         counts[result] = counts.get(result, 0) + 1
 
-    save_state(state, keys=("noisy_streak",))
-    if counts["sent"] > 0:
-        save_state(state, keys=("seen_msgids", "last_notified"))
+    save_state(state)
 
     logger.info(
         "Poll summary: sent=%d cooldown=%d not_human=%d no_snapshot=%d not_monitored=%d",
